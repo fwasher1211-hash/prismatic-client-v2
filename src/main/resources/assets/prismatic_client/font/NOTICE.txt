@@ -1,0 +1,2 @@
+poppins.ttf is Poppins Medium, copyright Indian Type Foundry, licensed under the SIL Open Font License 1.1.
+https://scripts.sil.org/OFL
