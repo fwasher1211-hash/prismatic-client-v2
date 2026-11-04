@@ -2,7 +2,6 @@ package com.prismatic.client;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.option.ParticlesMode;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.entity.player.PlayerEntity;
@@ -18,7 +17,7 @@ import java.util.Locale;
 /** Tick-driven features: flight, snap look, quick action, particles, plus tooltip and pause banner. */
 public final class Features {
 	private static boolean snapPrev, quickPrev, flightApplied, particlesOverridden;
-	private static ParticlesMode savedParticles;
+	private static int savedParticles = -1;
 
 	private static boolean down(long win, int key) {
 		return key > 0 && GLFW.glfwGetKey(win, key) == GLFW.GLFW_PRESS;
@@ -29,17 +28,18 @@ public final class Features {
 		long win = mc.getWindow().getHandle();
 		PlayerEntity p = mc.player;
 
-		// particles
+		// particles (enum class is looked up from the option itself, so no import is needed)
+		var particleOpt = mc.options.getParticles();
+		var modes = particleOpt.getValue().getDeclaringClass().getEnumConstants();
 		if (Config.isEnabled("particles")) {
-			ParticlesMode[] modes = {ParticlesMode.ALL, ParticlesMode.DECREASED, ParticlesMode.MINIMAL};
-			int idx = Math.max(0, Math.min(2, Math.round(Config.num("particles.level", 2))));
+			int idx = Math.max(0, Math.min(modes.length - 1, Math.round(Config.num("particles.level", 2))));
 			if (!particlesOverridden) {
-				savedParticles = mc.options.getParticles().getValue();
+				savedParticles = particleOpt.getValue().ordinal();
 				particlesOverridden = true;
 			}
-			if (mc.options.getParticles().getValue() != modes[idx]) mc.options.getParticles().setValue(modes[idx]);
+			if (particleOpt.getValue() != modes[idx]) particleOpt.setValue(modes[idx]);
 		} else if (particlesOverridden) {
-			if (savedParticles != null) mc.options.getParticles().setValue(savedParticles);
+			if (savedParticles >= 0 && savedParticles < modes.length) particleOpt.setValue(modes[savedParticles]);
 			particlesOverridden = false;
 		}
 
